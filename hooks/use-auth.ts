@@ -28,54 +28,63 @@ export function useAuth() {
     loading: true,
   });
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+  const fetchProfile = useCallback(
+    async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-      if (error) throw error;
-      return data as Profile;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
-  }, [supabase]);
+        if (error) throw error;
+        return data as Profile;
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+      }
+    },
+    [supabase]
+  );
 
   useEffect(() => {
     const getProfile = async () => {
       try {
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-        
+        const {
+          data: { user: authUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
         if (authUser) {
           const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', authUser.id)
+            .from("profiles")
+            .select("*")
+            .eq("id", authUser.id)
             .single();
 
           if (profile) {
             const profileWithTimestamp = {
               ...profile,
-              timestamp: Date.now()
+              timestamp: Date.now(),
             };
-            localStorage.setItem('user_profile', JSON.stringify(profileWithTimestamp));
+            localStorage.setItem(
+              "user_profile",
+              JSON.stringify(profileWithTimestamp)
+            );
             setState({ user: profile, loading: false });
             return;
           }
         }
-        localStorage.removeItem('user_profile');
+        localStorage.removeItem("user_profile");
         setState({ user: null, loading: false });
       } catch (error) {
-        console.error('Error fetching user profile:', error);
-        localStorage.removeItem('user_profile');
+        console.error("Error fetching user profile:", error);
+        localStorage.removeItem("user_profile");
         setState({ user: null, loading: false });
       }
     };
 
-    const storedProfile = localStorage.getItem('user_profile');
+    const storedProfile = localStorage.getItem("user_profile");
     if (storedProfile) {
       const parsed = JSON.parse(storedProfile);
       const fiveMinutes = 5 * 60 * 1000;
@@ -157,15 +166,13 @@ export function useAuth() {
       if (error) throw error;
 
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            full_name: userData.full_name,
-            email: userData.email,
-            phone_number: userData.phone_number,
-            role: userData.role,
-          });
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: data.user.id,
+          full_name: userData.full_name,
+          email: userData.email,
+          phone_number: userData.phone_number,
+          role: userData.role,
+        });
 
         if (profileError) throw profileError;
 

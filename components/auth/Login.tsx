@@ -34,7 +34,6 @@ const formSchema = z.object({
 
 export default function Login() {
   const { signIn } = useAuth();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -51,7 +50,7 @@ export default function Login() {
       const email = `${values.emailPrefix}@aquatreat.co.ke`;
       await signIn(email, values.password);
     } catch (error) {
-      // Error is already handled by the hook
+      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +110,7 @@ export default function Login() {
                             placeholder='name'
                             className='rounded-r-none border-r-0'
                             disabled={isLoading}
+                            suppressHydrationWarning
                           />
                         </FormControl>
                         <span className='inline-flex items-center rounded-r-md border border-l-0 border-input bg-muted px-3 text-sm text-muted-foreground'>
@@ -129,11 +129,12 @@ export default function Login() {
                       <FormLabel className='text-gray-700'>Password</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='Enter your password'
                           type='password'
+                          placeholder='Enter your password'
                           className='bg-white/70 border-gray-200'
                           {...field}
                           disabled={isLoading}
+                          suppressHydrationWarning
                         />
                       </FormControl>
                       <FormMessage />

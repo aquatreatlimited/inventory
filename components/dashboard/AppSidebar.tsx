@@ -160,6 +160,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
           icon: LayoutDashboard,
         },
         {
+          title: "Inventory",
+          href: "/inventory",
+          icon: Package,
+        },
+        {
           title: "Reports",
           href: "/reports",
           icon: FileText,
@@ -220,11 +225,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
           icon: ArrowLeftRight,
           action: () => setShowTransferDrawer(true),
         },
-               {
+        {
           title: "Create LPO",
           icon: FileText,
           action: () => setShowCreateLPOSheet(true),
-        }
+        },
       ],
     },
     user: {
@@ -257,37 +262,41 @@ export function AppSidebar({ user }: AppSidebarProps) {
               <SidebarGroupLabel className='px-2 text-xs font-medium text-zinc-400 tracking-wider'>
                 NAVIGATION
               </SidebarGroupLabel>
-              <SidebarMenu className="mt-2">
+              <SidebarMenu className='mt-2'>
                 {navItems.menu.map((item, index) => (
                   <SidebarMenuItem key={index}>
                     <SidebarMenuButton
                       onClick={() => router.push(item.href)}
                       tooltip={item.title}
                       className={cn(
-                        'relative px-3 py-2 rounded-lg transition-all duration-300 group',
-                        'hover:bg-white/60',
-                        pathname === item.href && 
-                          'bg-white/80 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-indigo-600 before:to-purple-600'
+                        "relative px-3 py-2 rounded-lg transition-all duration-300 group",
+                        "hover:bg-white/60",
+                        pathname === item.href &&
+                          "bg-white/80 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-indigo-600 before:to-purple-600"
                       )}>
-                      <div className={cn(
-                        "p-1.5 rounded-md transition-colors",
-                        pathname === item.href 
-                          ? "bg-gradient-to-br from-indigo-50 to-purple-50" 
-                          : "group-hover:bg-zinc-50"
-                      )}>
-                        <item.icon className={cn(
-                          "h-4 w-4 transition-colors",
+                      <div
+                        className={cn(
+                          "p-1.5 rounded-md transition-colors",
                           pathname === item.href
-                            ? "text-indigo-600"
-                            : "text-zinc-400 group-hover:text-zinc-600"
-                        )} />
+                            ? "bg-gradient-to-br from-indigo-50 to-purple-50"
+                            : "group-hover:bg-zinc-50"
+                        )}>
+                        <item.icon
+                          className={cn(
+                            "h-4 w-4 transition-colors",
+                            pathname === item.href
+                              ? "text-indigo-600"
+                              : "text-zinc-400 group-hover:text-zinc-600"
+                          )}
+                        />
                       </div>
-                      <span className={cn(
-                        "text-sm transition-colors ml-3",
-                        pathname === item.href 
-                          ? "font-medium text-indigo-600" 
-                          : "text-zinc-600 group-hover:text-zinc-900"
-                      )}>
+                      <span
+                        className={cn(
+                          "text-sm transition-colors ml-3",
+                          pathname === item.href
+                            ? "font-medium text-indigo-600"
+                            : "text-zinc-600 group-hover:text-zinc-900"
+                        )}>
                         {item.title}
                       </span>
                     </SidebarMenuButton>
@@ -298,24 +307,23 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
             {navItems.actions && (
               <>
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
-                
+                <div className='h-px w-full bg-gradient-to-r from-transparent via-zinc-200 to-transparent' />
+
                 <SidebarGroup>
                   <SidebarGroupLabel className='px-2 text-xs font-medium text-zinc-400 tracking-wider'>
                     QUICK ACTIONS
                   </SidebarGroupLabel>
-                  <SidebarMenu className="mt-2">
+                  <SidebarMenu className='mt-2'>
                     {navItems.actions.map((item, index) => (
                       <SidebarMenuItem key={index}>
                         <SidebarMenuButton
                           onClick={item.action}
                           tooltip={item.title}
-                          className="group px-3 py-2 rounded-lg hover:bg-white/60 transition-all duration-300"
-                        >
-                          <div className="p-1.5 rounded-md bg-gradient-to-br from-zinc-50 to-zinc-100/50 group-hover:from-indigo-50 group-hover:to-purple-50">
+                          className='group px-3 py-2 rounded-lg hover:bg-white/60 transition-all duration-300'>
+                          <div className='p-1.5 rounded-md bg-gradient-to-br from-zinc-50 to-zinc-100/50 group-hover:from-indigo-50 group-hover:to-purple-50'>
                             <item.icon className='h-4 w-4 text-zinc-500 group-hover:text-indigo-600' />
                           </div>
-                          <span className="text-sm text-zinc-600 group-hover:text-zinc-900 ml-3">
+                          <span className='text-sm text-zinc-600 group-hover:text-zinc-900 ml-3'>
                             {item.title}
                           </span>
                         </SidebarMenuButton>

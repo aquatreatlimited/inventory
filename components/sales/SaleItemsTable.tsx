@@ -53,25 +53,32 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
     queryFn: () => getLocationProducts("utawala"),
   });
 
-  const handleQuantityChange = (value: number) => {
-    setQuantity(value);
-    setTotalPrice(value * unitPrice);
+  const handleQuantityChange = (value: string) => {
+    const numValue = value === "" ? "" : parseInt(value);
+    setQuantity(numValue as number);
+    if (numValue && unitPrice) {
+      setTotalPrice(numValue * unitPrice);
+    }
   };
 
-  const handleUnitPriceChange = (value: number) => {
-    setUnitPrice(value);
-    setTotalPrice(quantity * value);
+  const handleUnitPriceChange = (value: string) => {
+    const numValue = value === "" ? "" : parseFloat(value);
+    setUnitPrice(numValue as number);
+    if (numValue && quantity) {
+      setTotalPrice(quantity * numValue);
+    }
   };
 
-  const handleTotalPriceChange = (value: number) => {
-    setTotalPrice(value);
-    if (quantity > 0) {
-      setUnitPrice(value / quantity);
+  const handleTotalPriceChange = (value: string) => {
+    const numValue = value === "" ? "" : parseFloat(value);
+    setTotalPrice(numValue as number);
+    if (numValue && quantity > 0) {
+      setUnitPrice(numValue / quantity);
     }
   };
 
   const handleAddItem = () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct || !quantity || !unitPrice || !totalPrice) return;
 
     const product = products.find((p) => p.id === selectedProduct);
     if (!product) return;
@@ -142,6 +149,11 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
                         value={product.id}
                         onSelect={(value) => {
                           setSelectedProduct(value);
+                          const button =
+                            document.querySelector('[role="combobox"]');
+                          if (button instanceof HTMLElement) {
+                            button.click();
+                          }
                         }}>
                         <Check
                           className={cn(
@@ -168,9 +180,7 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
             type='number'
             min='1'
             value={quantity}
-            onChange={(e) =>
-              handleQuantityChange(parseInt(e.target.value) || 0)
-            }
+            onChange={(e) => handleQuantityChange(e.target.value)}
           />
         </div>
 
@@ -182,9 +192,7 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
             min='0'
             step='0.01'
             value={unitPrice}
-            onChange={(e) =>
-              handleUnitPriceChange(parseFloat(e.target.value) || 0)
-            }
+            onChange={(e) => handleUnitPriceChange(e.target.value)}
           />
         </div>
 
@@ -196,9 +204,7 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
             min='0'
             step='0.01'
             value={totalPrice}
-            onChange={(e) =>
-              handleTotalPriceChange(parseFloat(e.target.value) || 0)
-            }
+            onChange={(e) => handleTotalPriceChange(e.target.value)}
           />
         </div>
 
