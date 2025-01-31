@@ -1,19 +1,26 @@
 "use server";
 
 import { createClient } from "./server";
-import type { 
-  Profile, 
+import type {
+  Profile,
   UserRole,
-  SaleMetrics, 
-  InventoryMetrics, 
-  CustomerMetrics, 
-  InventoryValueItem 
+  SaleMetrics,
+  InventoryMetrics,
+  CustomerMetrics,
+  InventoryValueItem,
 } from "@/lib/types/index";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "./admin";
 import { cache } from "react";
 import type { Database } from "@/types/supabase";
-import { subMonths, startOfMonth, endOfMonth, startOfDay, endOfDay, subDays } from "date-fns";
+import {
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  startOfDay,
+  endOfDay,
+  subDays,
+} from "date-fns";
 import { format } from "date-fns";
 
 // Add these helper functions at the top of the file
@@ -294,18 +301,20 @@ export async function getLocationProducts(location: string) {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from('products')
-      .select(`
+      .from("products")
+      .select(
+        `
         *,
         category:product_categories(id, name),
         inventory!inner(quantity)
-      `)
-      .eq('inventory.location', location);
+      `
+      )
+      .eq("inventory.location", location);
 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error("Error fetching products:", error);
     throw error;
   }
 }
@@ -321,26 +330,29 @@ export async function createProduct(
     const supabase = await createClient();
 
     // First get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Then get their profile with role
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)  // Important: Query by user ID
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id) // Important: Query by user ID
       .single();
 
     if (profileError || !profile) {
-      console.error('Profile error:', profileError);
-      throw new Error('Failed to fetch user profile');
+      console.error("Profile error:", profileError);
+      throw new Error("Failed to fetch user profile");
     }
 
-    if (!['admin', 'clerk'].includes(profile.role)) {
-      throw new Error('You do not have permission to create products');
+    if (!["admin", "clerk"].includes(profile.role)) {
+      throw new Error("You do not have permission to create products");
     }
 
     // Create the product with category
@@ -356,35 +368,33 @@ export async function createProduct(
       .single();
 
     if (productError) {
-      console.error('Product creation error:', productError);
+      console.error("Product creation error:", productError);
       throw new Error(productError.message);
     }
 
     // Create inventory entries
-    const { error: inventoryError } = await supabase
-      .from("inventory")
-      .insert([
-        {
-          product_id: product.id,
-          location: "kamulu",
-          quantity: 0,
-        },
-        {
-          product_id: product.id,
-          location: "utawala",
-          quantity: 0,
-        },
-      ]);
+    const { error: inventoryError } = await supabase.from("inventory").insert([
+      {
+        product_id: product.id,
+        location: "kamulu",
+        quantity: 0,
+      },
+      {
+        product_id: product.id,
+        location: "utawala",
+        quantity: 0,
+      },
+    ]);
 
     if (inventoryError) {
-      console.error('Inventory creation error:', inventoryError);
+      console.error("Inventory creation error:", inventoryError);
       throw new Error(inventoryError.message);
     }
 
     revalidatePath("/inventory/kamulu");
     revalidatePath("/inventory/utawala");
   } catch (error) {
-    console.error('Error in createProduct:', error);
+    console.error("Error in createProduct:", error);
     throw error;
   }
 }
@@ -430,19 +440,19 @@ export async function recordTransfer({
   to_location,
   quantity,
   transferred_by,
-  status = 'pending'
+  status = "pending",
 }: {
   product_id: string;
   from_location: string;
   to_location: string;
   quantity: number;
   transferred_by: string;
-  status?: 'pending' | 'completed' | 'cancelled';
+  status?: "pending" | "completed" | "cancelled";
 }) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('transfers')
+    .from("transfers")
     .insert({
       product_id,
       from_location,
@@ -450,7 +460,7 @@ export async function recordTransfer({
       quantity,
       transferred_by,
       status,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     })
     .select()
     .single();
@@ -465,7 +475,6 @@ export async function getSalesMetrics(): Promise<SaleMetrics> {
     const now = new Date();
     const thirtyDaysAgo = subMonths(now, 1);
 
-
     // Simplify the query first to check if we get any data
     const { data: dailySales, error } = await supabase
       .from("sales")
@@ -478,7 +487,6 @@ export async function getSalesMetrics(): Promise<SaleMetrics> {
       throw error;
     }
 
-
     if (!dailySales || dailySales.length === 0) {
       // Return empty data structure instead of throwing
       return {
@@ -486,15 +494,15 @@ export async function getSalesMetrics(): Promise<SaleMetrics> {
         currentDaySales: 0,
         previousDaySales: 0,
         totalSales: 0,
-        pendingSales: 0
+        pendingSales: 0,
       };
     }
 
     // Process sales data
     const processedDailySales = dailySales.reduce((acc: any[], sale) => {
       const date = format(new Date(sale.created_at), "yyyy-MM-dd");
-      const existingDate = acc.find(item => item.date === date);
-      
+      const existingDate = acc.find((item) => item.date === date);
+
       if (existingDate) {
         existingDate.total_amount += sale.total_amount;
       } else {
@@ -505,7 +513,6 @@ export async function getSalesMetrics(): Promise<SaleMetrics> {
       }
       return acc;
     }, []);
-
 
     // Get current day's sales
     const currentDayStart = startOfDay(now);
@@ -636,5 +643,67 @@ export async function testDatabaseConnection() {
   } catch (error) {
     console.error("Database connection test failed:", error);
     return false;
+  }
+}
+
+export async function updateProduct(
+  productId: string,
+  data: {
+    name: string;
+    description: string | null;
+    min_stock_level: number;
+    category_id: string | null;
+  }
+): Promise<void> {
+  try {
+    const supabase = await createClient();
+
+    // First get the authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error("Not authenticated");
+    }
+
+    // Then get their profile with role
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("Profile error:", profileError);
+      throw new Error("Failed to fetch user profile");
+    }
+
+    if (!["admin", "clerk"].includes(profile.role)) {
+      throw new Error("You do not have permission to update products");
+    }
+
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({
+        name: data.name,
+        description: data.description,
+        min_stock_level: data.min_stock_level,
+        category_id: data.category_id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", productId);
+
+    if (updateError) {
+      console.error("Product update error:", updateError);
+      throw new Error(updateError.message);
+    }
+
+    revalidatePath("/inventory/kamulu");
+    revalidatePath("/inventory/utawala");
+  } catch (error) {
+    console.error("Error in updateProduct:", error);
+    throw error;
   }
 }

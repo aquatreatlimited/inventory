@@ -13,12 +13,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, RefreshCw, Minus, FileDown } from "lucide-react";
+import { Search, Plus, RefreshCw, Minus, FileDown, Edit } from "lucide-react";
 import {
   getLocationProducts,
   updateStockLevel,
 } from "@/lib/supabase/supabase-actions";
-import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -38,7 +37,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -55,6 +53,7 @@ import {
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { EditProductDialog } from "./EditProductDialog";
 
 interface ProductListProps {
   location: "kamulu" | "utawala";
@@ -86,6 +85,7 @@ export function ProductList({ location }: ProductListProps) {
   const queryClient = useQueryClient();
   const [showStockDialog, setShowStockDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [newQuantity, setNewQuantity] = useState<number>(0);
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -378,12 +378,13 @@ export function ProductList({ location }: ProductListProps) {
               <TableHead>Stock Level</TableHead>
               <TableHead>Min. Stock</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className='text-center py-4'>
+                <TableCell colSpan={7} className='text-center py-4'>
                   No products found
                 </TableCell>
               </TableRow>
@@ -422,6 +423,17 @@ export function ProductList({ location }: ProductListProps) {
                         ? "Low Stock"
                         : "In Stock"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setShowEditDialog(true);
+                      }}>
+                      <Edit className='h-4 w-4' />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -519,6 +531,13 @@ export function ProductList({ location }: ProductListProps) {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Edit Dialog */}
+      <EditProductDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        product={selectedProduct}
+      />
     </div>
   );
 }

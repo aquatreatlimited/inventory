@@ -138,7 +138,12 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className='w-[400px] p-0'>
-              <Command>
+              <Command
+                filter={(value, search) => {
+                  if (value.toLowerCase().includes(search.toLowerCase()))
+                    return 1;
+                  return 0;
+                }}>
                 <CommandInput placeholder='Search product...' />
                 <CommandList>
                   <CommandEmpty>No product found.</CommandEmpty>
@@ -146,9 +151,9 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
                     {products.map((product) => (
                       <CommandItem
                         key={product.id}
-                        value={product.id}
-                        onSelect={(value) => {
-                          setSelectedProduct(value);
+                        value={product.name}
+                        onSelect={() => {
+                          setSelectedProduct(product.id);
                           const button =
                             document.querySelector('[role="combobox"]');
                           if (button instanceof HTMLElement) {
