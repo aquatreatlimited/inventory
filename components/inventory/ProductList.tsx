@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,6 +28,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import {
   Dialog,
@@ -448,32 +450,59 @@ export function ProductList({ location }: ProductListProps) {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  className={cn(
-                    currentPage === 1 && "pointer-events-none opacity-50"
-                  )}
+                  className='cursor-pointer'
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 />
               </PaginationItem>
-              {[...Array(totalPages)].map((_, i) => (
-                <PaginationItem key={i + 1}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(i + 1)}
-                    isActive={currentPage === i + 1}>
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+
+              {/* Generate page numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((pageNumber) => {
+                  // Show first page, last page, and pages around current page
+                  return (
+                    pageNumber === 1 ||
+                    pageNumber === totalPages ||
+                    Math.abs(pageNumber - currentPage) <= 1
+                  );
+                })
+                .map((pageNumber, i, array) => {
+                  // If there's a gap, show ellipsis
+                  if (i > 0 && array[i - 1] !== pageNumber - 1) {
+                    return (
+                      <React.Fragment key={`ellipsis-${pageNumber}`}>
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink
+                            className='cursor-pointer'
+                            onClick={() => setCurrentPage(pageNumber)}
+                            isActive={pageNumber === currentPage}>
+                            {pageNumber}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </React.Fragment>
+                    );
+                  }
+
+                  return (
+                    <PaginationItem key={pageNumber}>
+                      <PaginationLink
+                        className='cursor-pointer'
+                        onClick={() => setCurrentPage(pageNumber)}
+                        isActive={pageNumber === currentPage}>
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+
               <PaginationItem>
                 <PaginationNext
+                  className='cursor-pointer'
                   onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
                   }
-                  className={cn(
-                    currentPage === totalPages &&
-                      "pointer-events-none opacity-50"
-                  )}
                 />
               </PaginationItem>
             </PaginationContent>
