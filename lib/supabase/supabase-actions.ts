@@ -615,19 +615,15 @@ export async function getCustomerMetrics(): Promise<CustomerMetrics> {
   };
 }
 
-// Add this function to test the database connection
 export async function testDatabaseConnection() {
   try {
     const supabase = await createClient();
-    
-    // Try to insert a test sale
     const { data, error } = await supabase
       .from("sales")
       .insert({
         total_amount: 1000,
         status: "approved",
         created_at: new Date().toISOString(),
-        // Add other required fields based on your schema
       })
       .select();
 

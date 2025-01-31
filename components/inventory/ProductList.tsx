@@ -93,7 +93,7 @@ export function ProductList({ location }: ProductListProps) {
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["products", location],
     queryFn: () => getLocationProducts(location),
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
