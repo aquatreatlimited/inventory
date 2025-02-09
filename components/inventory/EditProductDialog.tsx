@@ -137,7 +137,13 @@ export function EditProductDialog({
         (oldData: any[] | undefined) => {
           if (!oldData) return oldData;
           return oldData.map((item) =>
-            item.id === product.id ? { ...item, ...data } : item
+            item.id === product.id
+              ? {
+                  ...item,
+                  ...data,
+                  inventory: item.inventory, // Preserve the existing inventory data
+                }
+              : item
           );
         }
       );
@@ -147,7 +153,13 @@ export function EditProductDialog({
         (oldData: any[] | undefined) => {
           if (!oldData) return oldData;
           return oldData.map((item) =>
-            item.id === product.id ? { ...item, ...data } : item
+            item.id === product.id
+              ? {
+                  ...item,
+                  ...data,
+                  inventory: item.inventory, // Preserve the existing inventory data
+                }
+              : item
           );
         }
       );

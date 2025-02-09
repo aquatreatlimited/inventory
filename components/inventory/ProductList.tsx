@@ -91,6 +91,7 @@ export function ProductList({ location }: ProductListProps) {
   const [newQuantity, setNewQuantity] = useState<number>(0);
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["products", location],
@@ -124,6 +125,9 @@ export function ProductList({ location }: ProductListProps) {
       );
     }
 
+    // Sort products by name alphabetically
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
 
@@ -134,8 +138,23 @@ export function ProductList({ location }: ProductListProps) {
     };
   };
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["products", location] });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["products", location] });
+      toast({
+        title: "Success",
+        description: "Inventory refreshed successfully",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to refresh inventory",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleStockAdjustment = async () => {
@@ -357,8 +376,13 @@ export function ProductList({ location }: ProductListProps) {
             variant='outline'
             size='icon'
             onClick={handleRefresh}
+            disabled={isRefreshing}
             className='hover:bg-gray-100'>
-            <RefreshCw className='h-4 w-4' />
+            <RefreshCw
+              className={cn("h-4 w-4", {
+                "animate-spin": isRefreshing,
+              })}
+            />
           </Button>
           <Badge variant='secondary' className='bg-white/50'>
             {totalProducts} products

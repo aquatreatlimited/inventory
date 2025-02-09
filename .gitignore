@@ -41,3 +41,6 @@ next-env.d.ts
 
 #supabasesql
 supabasesql.sql
+
+# schema
+schema.md
