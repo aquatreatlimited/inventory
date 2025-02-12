@@ -1,6 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+interface SaleItem {
+  id: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  effective_quantity: number;
+  product_name: string;
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -132,7 +141,7 @@ export async function GET() {
 
         // Transform the items to match the expected structure
         const transformedItems =
-          items?.map((item) => ({
+          items?.map((item: SaleItem) => ({
             id: item.id,
             quantity: item.quantity,
             unit_price: item.unit_price,
