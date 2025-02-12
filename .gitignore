@@ -44,3 +44,6 @@ supabasesql.sql
 
 # schema
 schema.md
+
+# migrations
+supabase/migrations/*

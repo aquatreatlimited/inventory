@@ -13,8 +13,11 @@ import {
 import { format, formatCurrency } from "@/lib/utils";
 import type { Profile } from "@/lib/types/index";
 import { useQuery } from "@tanstack/react-query";
-import type { ReactNode } from 'react';
-import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { ReactNode } from "react";
+import {
+  NameType,
+  ValueType,
+} from "recharts/types/component/DefaultTooltipContent";
 
 interface DashboardContentProps {
   user: Profile;
@@ -36,6 +39,7 @@ const CustomTooltip = ({
   active,
   payload,
   label,
+  coordinate,
 }: RechartsTooltipProps<ValueType, NameType>) => {
   if (active && payload?.[0]) {
     const items = payload[0].payload.items as string[] | undefined;
@@ -51,8 +55,52 @@ const CustomTooltip = ({
       {}
     );
 
+    // Get the number of items to determine if we need to adjust position
+    const itemCount = aggregatedItems ? Object.keys(aggregatedItems).length : 0;
+    const estimatedHeight = 80 + itemCount * 24; // Base height + height per item
+    const viewportHeight =
+      typeof window !== "undefined" ? window.innerHeight : 0;
+
+    // Check if tooltip would overflow top or bottom of screen
+    const wouldOverflowBottom = coordinate?.y
+      ? coordinate.y + estimatedHeight > viewportHeight - 100
+      : false;
+    const wouldOverflowTop = coordinate?.y
+      ? coordinate.y - estimatedHeight < 100
+      : false;
+
+    // Determine the transform based on overflow conditions
+    let transform = "translateY(0)";
+    if (wouldOverflowTop) {
+      transform = "translateY(0)"; // Position below the point
+    } else if (wouldOverflowBottom) {
+      transform = "translateY(-100%)"; // Position above the point
+    }
+
     return (
-      <div className='rounded-lg border bg-background p-2 shadow-sm'>
+      <div
+        className='rounded-lg border bg-background p-2 shadow-sm max-h-[400px] overflow-auto'
+        style={{
+          transform,
+          maxWidth: "300px",
+          position: "relative",
+          pointerEvents: "auto",
+        }}
+        onMouseEnter={(e) => {
+          e.stopPropagation();
+        }}
+        onMouseLeave={(e) => {
+          e.stopPropagation();
+        }}
+        onMouseOver={(e) => {
+          e.stopPropagation();
+        }}
+        onMouseMove={(e) => {
+          e.stopPropagation();
+        }}
+        onWheel={(e) => {
+          e.stopPropagation();
+        }}>
         <div className='flex flex-col gap-1'>
           <span className='font-medium'>{label}</span>
           <span className='text-muted-foreground'>
@@ -61,15 +109,24 @@ const CustomTooltip = ({
           {aggregatedItems && Object.keys(aggregatedItems).length > 0 && (
             <div className='mt-1 border-t pt-1'>
               <span className='text-xs text-muted-foreground'>Items Sold:</span>
-              <ul className='mt-1 text-sm text-muted-foreground'>
-                {Object.entries(aggregatedItems)
-                  .sort(([aName], [bName]) => aName.localeCompare(bName))
-                  .map(([productName, quantity], index) => (
-                    <li key={index}>
-                      {String(productName)} ({String(quantity)})
-                    </li>
-                  ))}
-              </ul>
+              <div
+                className='mt-1 max-h-[250px] overflow-y-auto'
+                onMouseEnter={(e) => e.stopPropagation()}
+                onMouseLeave={(e) => e.stopPropagation()}
+                onWheel={(e) => e.stopPropagation()}>
+                <ul className='text-sm text-muted-foreground space-y-1'>
+                  {Object.entries(aggregatedItems)
+                    .sort(([aName], [bName]) => aName.localeCompare(bName))
+                    .map(([productName, quantity], index) => (
+                      <li key={index} className='flex justify-between gap-4'>
+                        <span className='truncate'>{String(productName)}</span>
+                        <span className='flex-shrink-0'>
+                          ({String(quantity)})
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
             </div>
           )}
         </div>

@@ -91,36 +91,71 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
+    // First get all sales with their basic info
     const { data: sales, error } = await supabase
       .from("sales")
       .select(
         `
         *,
-        profiles:created_by (full_name),
-        approved_by_profile:approved_by (full_name),
-        sale_items (
-          *,
-          products (name)
+        profiles!sales_created_by_fkey (
+          full_name
+        ),
+        approved_by_profile: profiles!sales_approved_by_fkey (
+          full_name
         )
       `
       )
+      .neq("status", "fully_returned")
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching sales:", error);
+      throw error;
+    }
 
-    return NextResponse.json(sales);
+    // For each sale, get its items with effective quantities
+    const salesWithItems = await Promise.all(
+      sales.map(async (sale) => {
+        const { data: items, error: itemsError } = await supabase.rpc(
+          "get_sale_items_with_returns",
+          { p_sale_id: sale.id }
+        );
+
+        if (itemsError) {
+          console.error("Error fetching sale items:", itemsError);
+          throw itemsError;
+        }
+
+        // Transform the items to match the expected structure
+        const transformedItems =
+          items?.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total_price: item.total_price,
+            effective_quantity: item.effective_quantity,
+            products: {
+              name: item.product_name,
+            },
+          })) || [];
+
+        return {
+          ...sale,
+          sale_items: transformedItems,
+        };
+      })
+    );
+
+    return NextResponse.json(salesWithItems);
   } catch (error: any) {
-    return new NextResponse(error.message, { status: 500 });
+    console.error("Sales fetch error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to fetch sales" },
+      { status: 500 }
+    );
   }
 }

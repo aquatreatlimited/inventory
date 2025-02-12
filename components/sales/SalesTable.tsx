@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, RotateCcw } from "lucide-react";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -48,34 +48,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-interface SaleItem {
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  products: {
-    name: string;
-  };
-}
-
-interface Sale {
-  id: string;
-  customer_name: string;
-  customer_phone: string | null;
-  customer_email: string | null;
-  total_amount: number;
-  payment_method: "cash" | "bank_transfer" | "mpesa" | "cheque";
-  payment_reference: string | null;
-  status: "pending" | "approved" | "rejected";
-  created_at: string;
-  profiles: {
-    full_name: string;
-  };
-  approved_by_profile: {
-    full_name: string;
-  } | null;
-  sale_items: SaleItem[];
-}
+import { ReturnDrawer } from "./ReturnDrawer";
+import { ReturnHistoryDrawer } from "./ReturnHistoryDrawer";
+import { Sale, SaleItem } from "@/types/sales";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PendingAction {
   id: string;
@@ -113,6 +94,13 @@ export function SalesTable() {
   );
   const [isStatusChanging, setIsStatusChanging] = useState(false);
   const router = useRouter();
+  const [selectedReturnSale, setSelectedReturnSale] = useState<Sale | null>(
+    null
+  );
+  const [selectedHistorySale, setSelectedHistorySale] = useState<Sale | null>(
+    null
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const canManageStatus =
     user?.role && ["admin", "accountant"].includes(user.role);
@@ -157,8 +145,23 @@ export function SalesTable() {
     };
   };
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["sales"] });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["sales"] });
+      toast({
+        title: "Success",
+        description: "Sales refreshed successfully",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to refresh sales",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleStatusClick = (
@@ -202,13 +205,12 @@ export function SalesTable() {
             variant: "destructive",
             title: "Stock Check Required",
             description: (
-              <div className="flex flex-col gap-2">
+              <div className='flex flex-col gap-2'>
                 <p>{data.details}</p>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push('/inventory')}
-                >
+                  variant='outline'
+                  size='sm'
+                  onClick={() => router.push("/inventory")}>
                   Check Inventory
                 </Button>
               </div>
@@ -221,7 +223,7 @@ export function SalesTable() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ["sales"] });
-      
+
       toast({
         title: "Success",
         description: `Sale ${pendingAction.action} successfully`,
@@ -316,10 +318,22 @@ export function SalesTable() {
         <div className='flex items-center gap-3'>
           <Button
             variant='outline'
+            onClick={() => setSelectedHistorySale({ id: "dummy" } as Sale)}
+            className='gap-2'>
+            <RotateCcw className='h-4 w-4' />
+            Return History
+          </Button>
+          <Button
+            variant='outline'
             size='icon'
             onClick={handleRefresh}
+            disabled={isRefreshing}
             className='border-gray-100/50 hover:bg-white/50 transition-colors'>
-            <RefreshCw className='h-4 w-4 text-muted-foreground/70' />
+            <RefreshCw
+              className={cn("h-4 w-4 text-muted-foreground/70", {
+                "animate-spin": isRefreshing,
+              })}
+            />
           </Button>
           <Badge
             variant='secondary'
@@ -333,20 +347,18 @@ export function SalesTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Total Amount</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead>Status</TableHead>
-              {canManageStatus && <TableHead className="text-right">Actions</TableHead>}
+              <TableHead className='w-[100px]'>Date</TableHead>
+              <TableHead className='w-[200px]'>Customer</TableHead>
+              <TableHead className='w-[300px]'>Items</TableHead>
+              <TableHead className='w-[150px]'>Total Amount</TableHead>
+              <TableHead className='w-[120px]'>Status</TableHead>
+              <TableHead className='w-[200px] text-right'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedSales.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className='text-center py-4'>
+                <TableCell colSpan={6} className='text-center py-4'>
                   No sales found
                 </TableCell>
               </TableRow>
@@ -356,40 +368,35 @@ export function SalesTable() {
                   key={sale.id}
                   className='cursor-pointer hover:bg-muted/50'
                   onClick={() => setSelectedSale(sale)}>
-                  <TableCell>
-                    {format(new Date(sale.created_at), "dd/MM/yyyy HH:mm")}
+                  <TableCell className='whitespace-nowrap'>
+                    {format(new Date(sale.created_at), "dd/MM/yyyy")}
                   </TableCell>
                   <TableCell>
                     <div className='flex flex-col'>
-                      <span className='font-medium'>{sale.customer_name}</span>
+                      <span className='font-medium truncate'>
+                        {sale.customer_name}
+                      </span>
                       {sale.customer_phone && (
-                        <span className='text-sm text-muted-foreground'>
+                        <span className='text-sm text-muted-foreground truncate'>
                           {sale.customer_phone}
                         </span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className='flex flex-col gap-1'>
-                      {sale.sale_items.map((item: SaleItem, index: number) => (
-                        <div key={index} className='text-sm'>
-                          {item.products.name} × {item.quantity}
-                        </div>
-                      ))}
+                    <div className='flex flex-col gap-1 max-w-[300px]'>
+                      {sale.sale_items
+                        .filter((item: SaleItem) => item.effective_quantity > 0)
+                        .map((item: SaleItem, index: number) => (
+                          <div key={index} className='text-sm truncate'>
+                            {item.products.name} × {item.effective_quantity}
+                          </div>
+                        ))}
                     </div>
                   </TableCell>
-                  <TableCell>KES {sale.total_amount}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant='outline'
-                      className={cn(
-                        "capitalize",
-                        getPaymentBadgeStyles(sale.payment_method)
-                      )}>
-                      {sale.payment_method.replace("_", " ")}
-                    </Badge>
+                  <TableCell className='whitespace-nowrap'>
+                    KES {sale.total_amount}
                   </TableCell>
-                  <TableCell>{sale.profiles.full_name}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -400,6 +407,7 @@ export function SalesTable() {
                           : "destructive"
                       }
                       className={cn(
+                        "whitespace-nowrap w-fit",
                         sale.status === "approved"
                           ? "bg-green-100 text-green-800"
                           : sale.status === "pending"
@@ -409,33 +417,46 @@ export function SalesTable() {
                       {sale.status}
                     </Badge>
                   </TableCell>
-                  {canManageStatus && (
-                    <TableCell className="text-right">
-                      {sale.status === "pending" && (
-                        <div className="flex justify-end gap-2">
+                  <TableCell className='text-right'>
+                    <div className='flex justify-end gap-2'>
+                      {sale.status === "pending" && canManageStatus && (
+                        <>
                           <Button
-                            size="sm"
+                            size='sm'
                             onClick={(e) => {
                               e.stopPropagation();
                               handleStatusClick(sale.id, "approved");
                             }}
-                            className="bg-green-100 text-green-800 hover:bg-green-200">
+                            className='bg-green-100 text-green-800 hover:bg-green-200 whitespace-nowrap'>
                             Approve
                           </Button>
                           <Button
-                            size="sm"
-                            variant="outline"
+                            size='sm'
+                            variant='outline'
                             onClick={(e) => {
                               e.stopPropagation();
                               handleStatusClick(sale.id, "rejected");
                             }}
-                            className="text-red-800 hover:bg-red-100">
+                            className='text-red-800 hover:bg-red-100 whitespace-nowrap'>
                             Reject
                           </Button>
-                        </div>
+                        </>
                       )}
-                    </TableCell>
-                  )}
+                      {sale.status === "approved" && (
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReturnSale(sale);
+                          }}
+                          className='gap-2'>
+                          <RotateCcw className='h-4 w-4' />
+                          Return
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -527,6 +548,17 @@ export function SalesTable() {
         sale={selectedSale}
         open={!!selectedSale}
         onOpenChange={(open) => !open && setSelectedSale(null)}
+      />
+
+      <ReturnDrawer
+        sale={selectedReturnSale}
+        open={!!selectedReturnSale}
+        onOpenChange={(open) => !open && setSelectedReturnSale(null)}
+      />
+
+      <ReturnHistoryDrawer
+        open={!!selectedHistorySale}
+        onOpenChange={(open) => !open && setSelectedHistorySale(null)}
       />
     </div>
   );
