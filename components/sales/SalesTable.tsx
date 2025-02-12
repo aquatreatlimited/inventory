@@ -105,6 +105,10 @@ export function SalesTable() {
   const canManageStatus =
     user?.role && ["admin", "accountant"].includes(user.role);
 
+  // Add new permission check for returns
+  const canProcessReturns =
+    user?.role && ["admin", "clerk"].includes(user.role);
+
   const { data: sales = [], isLoading } = useQuery<Sale[]>({
     queryKey: ["sales"],
     queryFn: async () => {
@@ -442,7 +446,7 @@ export function SalesTable() {
                           </Button>
                         </>
                       )}
-                      {sale.status === "approved" && (
+                      {sale.status === "approved" && canProcessReturns && (
                         <Button
                           size='sm'
                           variant='outline'
