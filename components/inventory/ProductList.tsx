@@ -56,6 +56,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { EditProductDialog } from "./EditProductDialog";
+import { UpdateStockLevel } from "./UpdateStockLevel";
 
 interface ProductListProps {
   location: "kamulu" | "utawala";
@@ -353,6 +354,7 @@ export function ProductList({ location }: ProductListProps) {
 
         {/* Refresh, Export and Total Count */}
         <div className='flex items-center gap-4'>
+          <UpdateStockLevel />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' className='gap-2'>
