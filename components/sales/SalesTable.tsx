@@ -101,6 +101,10 @@ export function SalesTable() {
     null
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<{
+    saleId: string;
+    action: "approved" | "rejected";
+  } | null>(null);
 
   const canManageStatus =
     user?.role && ["admin", "accountant"].includes(user.role);
@@ -181,6 +185,7 @@ export function SalesTable() {
       return;
     }
 
+    setProcessingStatus({ saleId, action });
     setPendingAction({ id: saleId, action });
     setShowStatusDialog(true);
   };
@@ -242,6 +247,7 @@ export function SalesTable() {
       });
     } finally {
       setIsStatusChanging(false);
+      setProcessingStatus(null);
     }
   };
 
@@ -431,8 +437,17 @@ export function SalesTable() {
                               e.stopPropagation();
                               handleStatusClick(sale.id, "approved");
                             }}
+                            disabled={processingStatus?.saleId === sale.id}
                             className='bg-green-100 text-green-800 hover:bg-green-200 whitespace-nowrap'>
-                            Approve
+                            {processingStatus?.saleId === sale.id &&
+                            processingStatus.action === "approved" ? (
+                              <>
+                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                Approving...
+                              </>
+                            ) : (
+                              "Approve"
+                            )}
                           </Button>
                           <Button
                             size='sm'
@@ -441,8 +456,17 @@ export function SalesTable() {
                               e.stopPropagation();
                               handleStatusClick(sale.id, "rejected");
                             }}
+                            disabled={processingStatus?.saleId === sale.id}
                             className='text-red-800 hover:bg-red-100 whitespace-nowrap'>
-                            Reject
+                            {processingStatus?.saleId === sale.id &&
+                            processingStatus.action === "rejected" ? (
+                              <>
+                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                Rejecting...
+                              </>
+                            ) : (
+                              "Reject"
+                            )}
                           </Button>
                         </>
                       )}
