@@ -441,6 +441,7 @@ export async function recordTransfer({
   quantity,
   transferred_by,
   status = "pending",
+  batch_id = "",
 }: {
   product_id: string;
   from_location: string;
@@ -448,8 +449,26 @@ export async function recordTransfer({
   quantity: number;
   transferred_by: string;
   status?: "pending" | "completed" | "cancelled";
+  batch_id?: string;
 }) {
   const supabase = await createClient();
+
+  // If a batch_id is provided, check if a transfer with this batch_id and product_id already exists
+  if (batch_id) {
+    const { data: existingTransfer, error: checkError } = await supabase
+      .from("transfers")
+      .select("id")
+      .eq("product_id", product_id)
+      .eq("batch_id", batch_id)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking for existing transfer:", checkError);
+    } else if (existingTransfer) {
+      // Transfer already exists, return it to prevent duplicate
+      return existingTransfer;
+    }
+  }
 
   const { data, error } = await supabase
     .from("transfers")
@@ -460,6 +479,7 @@ export async function recordTransfer({
       quantity,
       transferred_by,
       status,
+      batch_id: batch_id || null, // Store the batch_id
       created_at: new Date().toISOString(),
     })
     .select()

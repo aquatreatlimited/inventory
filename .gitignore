@@ -47,3 +47,5 @@ schema.md
 
 # migrations
 supabase/migrations/*
+
+/migrations

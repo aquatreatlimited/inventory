@@ -43,6 +43,8 @@ export function TransferDrawer({ open, onOpenChange }: TransferDrawerProps) {
   const [transferDirection, setTransferDirection] = useState<
     "kamulu-to-utawala" | "utawala-to-kamulu"
   >("kamulu-to-utawala");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [transferId, setTransferId] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -74,6 +76,14 @@ export function TransferDrawer({ open, onOpenChange }: TransferDrawerProps) {
   });
 
   const handleTransfer = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+
+    // Generate a unique transfer ID for this batch
+    const batchId = Date.now().toString();
+    setTransferId(batchId);
+    setIsSubmitting(true);
+
     try {
       const fromLocation =
         transferDirection === "kamulu-to-utawala" ? "kamulu" : "utawala";
@@ -105,6 +115,7 @@ export function TransferDrawer({ open, onOpenChange }: TransferDrawerProps) {
               quantity: amount,
               transferred_by: user.id,
               status: "pending", // Explicitly set status to pending
+              batch_id: batchId, // Add batch ID to group related transfers
             });
           }
         )
@@ -125,6 +136,8 @@ export function TransferDrawer({ open, onOpenChange }: TransferDrawerProps) {
         title: "Error",
         description: error.message,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -203,10 +216,23 @@ export function TransferDrawer({ open, onOpenChange }: TransferDrawerProps) {
 
           <div className='flex-none p-4 border-t bg-background sticky bottom-0 shadow-[0_-1px_2px_rgba(0,0,0,0.1)]'>
             {selectedProducts.size > 0 && (
-              <Button size='lg' onClick={handleTransfer} className='w-full'>
-                <PackageOpen className='mr-2 h-4 w-4' />
-                Create Transfer Request ({selectedProducts.size}{" "}
-                {selectedProducts.size === 1 ? "item" : "items"})
+              <Button
+                size='lg'
+                onClick={handleTransfer}
+                className='w-full'
+                disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <span className='mr-2 h-4 w-4 animate-spin'>⏳</span>
+                    Processing Transfer...
+                  </>
+                ) : (
+                  <>
+                    <PackageOpen className='mr-2 h-4 w-4' />
+                    Create Transfer Request ({selectedProducts.size}{" "}
+                    {selectedProducts.size === 1 ? "item" : "items"})
+                  </>
+                )}
               </Button>
             )}
           </div>
