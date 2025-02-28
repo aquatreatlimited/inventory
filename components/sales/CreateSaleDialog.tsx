@@ -411,11 +411,15 @@ export function CreateSaleSheet({
                                 onSelect={(value) => {
                                   field.onChange(value);
                                   handleCustomerSelect(value);
-                                  // Close the popover
-                                  const button =
+
+                                  // Find and click the popover trigger to close it
+                                  const popoverTrigger =
                                     document.querySelector('[role="combobox"]');
-                                  if (button instanceof HTMLElement) {
-                                    button.click();
+                                  if (popoverTrigger instanceof HTMLElement) {
+                                    // Use a small timeout to ensure the selection is processed first
+                                    setTimeout(() => {
+                                      popoverTrigger.click();
+                                    }, 10);
                                   }
                                 }}
                                 className='w-full'>

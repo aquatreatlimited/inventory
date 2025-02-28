@@ -7,7 +7,9 @@ export async function PATCH(
 ) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -27,21 +29,20 @@ export async function PATCH(
     const body = await request.json();
     const { status, approved_by } = body;
 
-    if (status === 'approved') {
+    if (status === "approved") {
       // Call the stored procedure to approve the sale
-      const { data, error } = await supabase
-        .rpc('approve_sale', {
-          p_sale_id: params.id,
-          p_approved_by: user.id
-        });
+      const { data, error } = await supabase.rpc("approve_sale", {
+        p_sale_id: params.id,
+        p_approved_by: user.id,
+      });
 
       if (error) {
-        console.error('Error approving sale:', error);
+        console.error("Error approving sale:", error);
         return NextResponse.json(
-          { 
+          {
             error: error.message,
-            checkInventory: error.message.includes('Insufficient stock')
-          }, 
+            checkInventory: error.message.includes("Insufficient stock"),
+          },
           { status: 400 }
         );
       }
@@ -52,10 +53,10 @@ export async function PATCH(
     // Handle rejection case
     const { data: updatedSale, error: updateError } = await supabase
       .from("sales")
-      .update({ 
-        status: 'rejected',
+      .update({
+        status: "rejected",
         approved_by,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq("id", params.id)
       .select()
@@ -65,10 +66,10 @@ export async function PATCH(
 
     return NextResponse.json(updatedSale);
   } catch (error: any) {
-    console.error('Error processing sale:', error);
+    console.error("Error processing sale:", error);
     return NextResponse.json(
       { error: error.message || "Failed to process sale" },
       { status: 500 }
     );
   }
-} 
+}

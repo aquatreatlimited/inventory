@@ -116,6 +116,10 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
     }
   }, [items]);
 
+  const handleProductSelect = (id: string) => {
+    setSelectedProduct(id);
+  };
+
   return (
     <div className='space-y-4'>
       <div className='flex items-end gap-4'>
@@ -153,11 +157,16 @@ export function SaleItemsTable({ items, onChange }: SaleItemsTableProps) {
                         key={product.id}
                         value={product.name}
                         onSelect={() => {
-                          setSelectedProduct(product.id);
-                          const button =
+                          handleProductSelect(product.id);
+
+                          // Find and click the popover trigger to close it
+                          const popoverTrigger =
                             document.querySelector('[role="combobox"]');
-                          if (button instanceof HTMLElement) {
-                            button.click();
+                          if (popoverTrigger instanceof HTMLElement) {
+                            // Use a small timeout to ensure the selection is processed first
+                            setTimeout(() => {
+                              popoverTrigger.click();
+                            }, 10);
                           }
                         }}>
                         <Check
