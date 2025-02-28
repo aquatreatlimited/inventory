@@ -354,142 +354,177 @@ export function SalesTable() {
       </div>
 
       <div className='overflow-hidden rounded-lg border border-gray-100/50 bg-white/50 backdrop-blur-sm shadow-sm'>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className='w-[100px]'>Date</TableHead>
-              <TableHead className='w-[200px]'>Customer</TableHead>
-              <TableHead className='w-[300px]'>Items</TableHead>
-              <TableHead className='w-[150px]'>Total Amount</TableHead>
-              <TableHead className='w-[120px]'>Status</TableHead>
-              <TableHead className='w-[200px] text-right'>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedSales.length === 0 ? (
+        <div className='overflow-x-auto'>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className='text-center py-4'>
-                  No sales found
-                </TableCell>
+                <TableHead className='w-[100px]'>Date</TableHead>
+                <TableHead className='w-[180px]'>Customer</TableHead>
+                <TableHead className='w-[250px]'>Items</TableHead>
+                <TableHead className='w-[120px]'>Total Amount</TableHead>
+                <TableHead className='w-[100px]'>Status</TableHead>
+                <TableHead className='w-[180px] text-right'>Actions</TableHead>
               </TableRow>
-            ) : (
-              paginatedSales.map((sale) => (
-                <TableRow
-                  key={sale.id}
-                  className='cursor-pointer hover:bg-muted/50'
-                  onClick={() => setSelectedSale(sale)}>
-                  <TableCell className='whitespace-nowrap'>
-                    {format(new Date(sale.created_at), "dd/MM/yyyy")}
+            </TableHeader>
+            <TableBody>
+              {paginatedSales.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className='text-center py-4'>
+                    No sales found
                   </TableCell>
-                  <TableCell>
-                    <div className='flex flex-col'>
-                      <span className='font-medium truncate'>
-                        {sale.customer_name}
-                      </span>
-                      {sale.customer_phone && (
-                        <span className='text-sm text-muted-foreground truncate'>
-                          {sale.customer_phone}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className='flex flex-col gap-1 max-w-[300px]'>
-                      {sale.sale_items
-                        .filter((item: SaleItem) => item.effective_quantity > 0)
-                        .map((item: SaleItem, index: number) => (
-                          <div key={index} className='text-sm truncate'>
-                            {item.products.name} × {item.effective_quantity}
-                          </div>
-                        ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className='whitespace-nowrap'>
-                    KES {sale.total_amount}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        sale.status === "approved"
-                          ? "default"
-                          : sale.status === "pending"
-                          ? "outline"
-                          : "destructive"
-                      }
-                      className={cn(
-                        "whitespace-nowrap w-fit",
-                        sale.status === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : sale.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      )}>
-                      {sale.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className='text-right'>
-                    <div className='flex justify-end gap-2'>
-                      {sale.status === "pending" && canManageStatus && (
-                        <>
-                          <Button
-                            size='sm'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusClick(sale.id, "approved");
-                            }}
-                            disabled={processingStatus?.saleId === sale.id}
-                            className='bg-green-100 text-green-800 hover:bg-green-200 whitespace-nowrap'>
-                            {processingStatus?.saleId === sale.id &&
-                            processingStatus.action === "approved" ? (
-                              <>
-                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                Approving...
-                              </>
-                            ) : (
-                              "Approve"
-                            )}
-                          </Button>
+                </TableRow>
+              ) : (
+                paginatedSales.map((sale) => (
+                  <TableRow
+                    key={sale.id}
+                    className='cursor-pointer hover:bg-muted/50'
+                    onClick={() => setSelectedSale(sale)}>
+                    <TableCell className='whitespace-nowrap'>
+                      {format(new Date(sale.created_at), "dd/MM/yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex flex-col max-w-[180px]'>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className='font-medium truncate'>
+                                {sale.customer_name}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{sale.customer_name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {sale.customer_phone && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className='text-sm text-muted-foreground truncate'>
+                                  {sale.customer_phone}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{sale.customer_phone}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex flex-col gap-1 max-w-[250px]'>
+                        {sale.sale_items
+                          .filter(
+                            (item: SaleItem) => item.effective_quantity > 0
+                          )
+                          .map((item: SaleItem, index: number) => (
+                            <TooltipProvider key={index}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className='text-sm truncate'>
+                                    {item.products.name} ×{" "}
+                                    {item.effective_quantity}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    {item.products.name} ×{" "}
+                                    {item.effective_quantity}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className='whitespace-nowrap'>
+                      KES {sale.total_amount}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          sale.status === "approved"
+                            ? "default"
+                            : sale.status === "pending"
+                            ? "outline"
+                            : "destructive"
+                        }
+                        className={cn(
+                          "whitespace-nowrap w-fit",
+                          sale.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : sale.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        )}>
+                        {sale.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <div className='flex justify-end gap-2'>
+                        {sale.status === "pending" && canManageStatus && (
+                          <>
+                            <Button
+                              size='sm'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStatusClick(sale.id, "approved");
+                              }}
+                              disabled={processingStatus?.saleId === sale.id}
+                              className='bg-green-100 text-green-800 hover:bg-green-200 whitespace-nowrap'>
+                              {processingStatus?.saleId === sale.id &&
+                              processingStatus.action === "approved" ? (
+                                <>
+                                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                  Approving...
+                                </>
+                              ) : (
+                                "Approve"
+                              )}
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStatusClick(sale.id, "rejected");
+                              }}
+                              disabled={processingStatus?.saleId === sale.id}
+                              className='text-red-800 hover:bg-red-100 whitespace-nowrap'>
+                              {processingStatus?.saleId === sale.id &&
+                              processingStatus.action === "rejected" ? (
+                                <>
+                                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                  Rejecting...
+                                </>
+                              ) : (
+                                "Reject"
+                              )}
+                            </Button>
+                          </>
+                        )}
+                        {sale.status === "approved" && canProcessReturns && (
                           <Button
                             size='sm'
                             variant='outline'
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleStatusClick(sale.id, "rejected");
+                              setSelectedReturnSale(sale);
                             }}
-                            disabled={processingStatus?.saleId === sale.id}
-                            className='text-red-800 hover:bg-red-100 whitespace-nowrap'>
-                            {processingStatus?.saleId === sale.id &&
-                            processingStatus.action === "rejected" ? (
-                              <>
-                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                Rejecting...
-                              </>
-                            ) : (
-                              "Reject"
-                            )}
+                            className='gap-2'>
+                            <RotateCcw className='h-4 w-4' />
+                            Return
                           </Button>
-                        </>
-                      )}
-                      {sale.status === "approved" && canProcessReturns && (
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedReturnSale(sale);
-                          }}
-                          className='gap-2'>
-                          <RotateCcw className='h-4 w-4' />
-                          Return
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {totalPages > 1 && (
